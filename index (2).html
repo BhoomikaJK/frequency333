@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FREQUENCY 333 — Echo Chain</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=VT323&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+  :root {
+    --blood: #8b0000;
+    --red: #cc0000;
+    --amber: #ff6b00;
+    --static: #1a1a1a;
+    --deep: #0a0a0a;
+    --paper: #d4c8a8;
+    --paper-dark: #b8a882;
+    --green-glow: #00ff88;
+    --cyan-glow: #00cfff;
+    --white-noise: #e8e8e8;
+    --dim: #666;
+    --text: #c8bfa0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--deep);
+    color: var(--text);
+    font-family: 'Crimson Text', serif;
+    min-height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* SCANLINE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.15) 2px,
+      rgba(0,0,0,0.15) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* STATIC FLICKER */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: transparent;
+    pointer-events: none;
+    z-index: 9998;
+    animation: staticFlicker 0.1s infinite;
+  }
+
+  @keyframes staticFlicker {
+    0%, 95% { opacity: 0; }
+    96% { opacity: 0.03; background: white; }
+    97% { opacity: 0; }
+    98% { opacity: 0.02; background: white; }
+    100% { opacity: 0; }
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none;
+    position: fixed;
+    inset: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ══════════════════════════════════
+     INTRO / TITLE SCREEN
+  ══════════════════════════════════ */
+  #screen-intro {
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(ellipse at 50% 60%, rgba(139,0,0,0.15) 0%, transparent 60%),
+      var(--deep);
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .podcast-logo {
+    font-family: 'VT323', monospace;
+    font-size: clamp(0.7rem, 2vw, 1rem);
+    letter-spacing: 0.5em;
+    color: var(--dim);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .title-freq {
+    font-family: 'VT323', monospace;
+    font-size: clamp(3rem, 12vw, 9rem);
+    color: var(--red);
+    line-height: 0.85;
+    text-shadow:
+      0 0 20px rgba(204,0,0,0.8),
+      0 0 60px rgba(204,0,0,0.3),
+      2px 2px 0 #000;
+    animation: titlePulse 3s ease-in-out infinite;
+    letter-spacing: -0.02em;
+  }
+
+  @keyframes titlePulse {
+    0%, 100% { text-shadow: 0 0 20px rgba(204,0,0,0.8), 0 0 60px rgba(204,0,0,0.3), 2px 2px 0 #000; }
+    50% { text-shadow: 0 0 40px rgba(204,0,0,1), 0 0 100px rgba(204,0,0,0.5), 2px 2px 0 #000; }
+  }
+
+  .title-sub {
+    font-family: 'Special Elite', cursive;
+    font-size: clamp(1rem, 3vw, 1.6rem);
+    color: var(--paper-dark);
+    letter-spacing: 0.3em;
+    margin: 0.5rem 0 2rem;
+    text-transform: uppercase;
+  }
+
+  .on-air-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: var(--blood);
+    color: white;
+    font-family: 'VT323', monospace;
+    font-size: 1.4rem;
+    letter-spacing: 0.3em;
+    padding: 0.4rem 1.2rem;
+    border: 2px solid var(--red);
+    margin-bottom: 2.5rem;
+    animation: onAirBlink 1.2s ease-in-out infinite;
+  }
+
+  .on-air-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: #ff3333;
+    animation: onAirBlink 1.2s ease-in-out infinite;
+    box-shadow: 0 0 8px #ff3333;
+  }
+
+  @keyframes onAirBlink {
+    0%, 45% { opacity: 1; }
+    50%, 95% { opacity: 0.3; }
+    100% { opacity: 1; }
+  }
+
+  .intro-text {
+    max-width: 520px;
+    font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+    line-height: 1.8;
+    color: #a09070;
+    margin-bottom: 2rem;
+    font-style: italic;
+  }
+
+  .tagline {
+    font-family: 'Special Elite', cursive;
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    color: var(--amber);
+    margin-bottom: 2.5rem;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    letter-spacing: 0.2em;
+    padding: 0.8rem 2.5rem;
+    background: transparent;
+    border: 2px solid var(--red);
+    color: var(--red);
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--red);
+    transform: translateX(-100%);
+    transition: transform 0.2s;
+    z-index: -1;
+  }
+
+  .btn:hover { color: white; }
+  .btn:hover::before { transform: translateX(0); }
+
+  .btn-secondary {
+    border-color: var(--amber);
+    color: var(--amber);
+  }
+  .btn-secondary::before { background: var(--amber); }
+
+  .btn-green {
+    border-color: var(--green-glow);
+    color: var(--green-glow);
+  }
+  .btn-green::before { background: var(--green-glow); }
+  .btn-green:hover { color: #000; }
+
+  /* ══════════════════════════════════
+     GAME SHELL
+  ══════════════════════════════════ */
+  #screen-game {
+    display: none;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  #screen-game.active { display: flex; }
+
+  .hud {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 1.5rem;
+    background: rgba(0,0,0,0.8);
+    border-bottom: 1px solid rgba(139,0,0,0.4);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .hud-title {
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    color: var(--red);
+    letter-spacing: 0.15em;
+  }
+
+  .hud-level {
+    font-family: 'VT323', monospace;
+    font-size: 1.2rem;
+    color: var(--amber);
+    letter-spacing: 0.1em;
+  }
+
+  .hud-sanity {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'VT323', monospace;
+    font-size: 1.1rem;
+    color: var(--green-glow);
+  }
+
+  .sanity-bar {
+    width: 120px;
+    height: 8px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sanity-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blood), var(--green-glow));
+    background-size: 200% 100%;
+    transition: width 0.5s ease;
+    animation: sanityShift 4s ease-in-out infinite;
+  }
+
+  @keyframes sanityShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  /* MAIN GAME AREA */
+  .game-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 0;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  @media (max-width: 700px) {
+    .game-main { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+  }
+
+  /* CENTER SCENE */
+  .scene-area {
+    position: relative;
+    overflow: hidden;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .scene-title {
+    font-family: 'VT323', monospace;
+    font-size: 2rem;
+    color: var(--amber);
+    letter-spacing: 0.2em;
+    margin-bottom: 0.3rem;
+    text-shadow: 0 0 10px rgba(255,107,0,0.5);
+  }
+
+  .scene-subtitle {
+    font-family: 'Special Elite', cursive;
+    font-size: 0.85rem;
+    color: var(--dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 1.2rem;
+    border-bottom: 1px solid rgba(255,107,0,0.2);
+    padding-bottom: 0.8rem;
+  }
+
+  .scene-art {
+    font-family: 'VT323', monospace;
+    font-size: 0.75rem;
+    color: #3a3a3a;
+    line-height: 1.2;
+    margin-bottom: 1.2rem;
+    white-space: pre;
+    text-align: center;
+    overflow: hidden;
+    max-height: 120px;
+    animation: artFlicker 8s ease-in-out infinite;
+  }
+
+  @keyframes artFlicker {
+    0%, 90%, 100% { opacity: 0.6; }
+    93% { opacity: 0.2; }
+    95% { opacity: 0.8; }
+  }
+
+  .narrative {
+    font-size: clamp(0.9rem, 2vw, 1.05rem);
+    line-height: 1.85;
+    color: #b0a080;
+    margin-bottom: 1.2rem;
+    min-height: 100px;
+    flex: 1;
+  }
+
+  .narrative b { color: var(--paper); }
+  .narrative em { color: var(--amber); font-style: italic; }
+  .narrative .voice {
+    color: var(--red);
+    font-family: 'Special Elite', cursive;
+    font-style: italic;
+    display: block;
+    margin: 0.5rem 0;
+    padding-left: 1rem;
+    border-left: 2px solid var(--blood);
+  }
+
+  .choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .choice-btn {
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(139,0,0,0.4);
+    color: var(--text);
+    font-family: 'Crimson Text', serif;
+    font-size: 1rem;
+    padding: 0.7rem 1rem;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .choice-btn::before {
+    content: '▶';
+    color: var(--red);
+    margin-right: 0.6rem;
+    font-size: 0.7rem;
+  }
+
+  .choice-btn:hover {
+    background: rgba(139,0,0,0.2);
+    border-color: var(--red);
+    color: var(--paper);
+    transform: translateX(4px);
+  }
+
+  .choice-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    background: rgba(0,0,0,0.5);
+    border-left: 1px solid rgba(139,0,0,0.3);
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .sidebar-section {
+    border: 1px solid rgba(255,107,0,0.2);
+    padding: 0.8rem;
+  }
+
+  .sidebar-title {
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    letter-spacing: 0.2em;
+    color: var(--amber);
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+  }
+
+  .inventory-item {
+    font-size: 0.85rem;
+    color: #888;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+
+  .inventory-item:hover { color: var(--paper); }
+  .inventory-item.new { color: var(--green-glow); animation: newItemPulse 2s ease-in-out 3; }
+  @keyframes newItemPulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+
+  .log-entry {
+    font-size: 0.78rem;
+    color: #555;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    line-height: 1.5;
+  }
+
+  .log-entry.red { color: rgba(204,0,0,0.7); }
+  .log-entry.amber { color: rgba(255,107,0,0.7); }
+
+  /* ── PUZZLE OVERLAY ── */
+  .puzzle-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .puzzle-overlay.active { display: flex; }
+
+  .puzzle-box {
+    background: var(--deep);
+    border: 2px solid var(--red);
+    max-width: 600px;
+    width: 100%;
+    padding: 2rem;
+    position: relative;
+    box-shadow: 0 0 60px rgba(139,0,0,0.4), inset 0 0 30px rgba(0,0,0,0.5);
+  }
+
+  .puzzle-box::before {
+    content: '';
+    position: absolute;
+    top: -1px; left: -1px; right: -1px; height: 3px;
+    background: linear-gradient(90deg, transparent, var(--red), transparent);
+    animation: scanBeam 3s linear infinite;
+  }
+
+  @keyframes scanBeam {
+    0% { background-position: -100% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .puzzle-title {
+    font-family: 'VT323', monospace;
+    font-size: 1.8rem;
+    color: var(--amber);
+    letter-spacing: 0.2em;
+    margin-bottom: 0.3rem;
+  }
+
+  .puzzle-desc {
+    font-size: 0.9rem;
+    color: #888;
+    margin-bottom: 1.5rem;
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  /* DIAL PUZZLE */
+  .dial-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+  }
+
+  .dial {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .dial-label {
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+  }
+
+  .dial-display {
+    font-family: 'VT323', monospace;
+    font-size: 3rem;
+    color: var(--green-glow);
+    background: #0a0a0a;
+    border: 1px solid #333;
+    width: 80px;
+    text-align: center;
+    padding: 0.2rem;
+    text-shadow: 0 0 10px var(--green-glow);
+  }
+
+  .dial-btns { display: flex; gap: 0.3rem; }
+
+  .dial-btn {
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    width: 35px; height: 30px;
+    background: #111;
+    border: 1px solid #333;
+    color: var(--amber);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .dial-btn:hover { background: rgba(255,107,0,0.2); border-color: var(--amber); }
+
+  .puzzle-feedback {
+    min-height: 2rem;
+    font-family: 'VT323', monospace;
+    font-size: 1.3rem;
+    text-align: center;
+    letter-spacing: 0.1em;
+    transition: all 0.3s;
+  }
+
+  /* TAPE PUZZLE */
+  .tape-reels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin: 1rem 0;
+    justify-content: center;
+  }
+
+  .tape-reel {
+    background: #111;
+    border: 2px solid #333;
+    padding: 0.6rem 1rem;
+    font-family: 'Special Elite', cursive;
+    font-size: 0.8rem;
+    color: var(--paper-dark);
+    cursor: grab;
+    user-select: none;
+    transition: all 0.2s;
+    position: relative;
+    min-width: 90px;
+    text-align: center;
+  }
+
+  .tape-reel:hover { border-color: var(--amber); color: var(--paper); }
+  .tape-reel.selected { border-color: var(--green-glow); color: var(--green-glow); }
+  .tape-reel.placed { border-color: var(--red); color: var(--red); opacity: 0.5; pointer-events: none; }
+
+  .tape-slots {
+    display: flex;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .tape-slot {
+    width: 90px;
+    min-height: 60px;
+    border: 2px dashed #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'VT323', monospace;
+    font-size: 0.9rem;
+    color: #333;
+    transition: border-color 0.2s;
+    text-align: center;
+    padding: 0.3rem;
+  }
+
+  .tape-slot.filled { border-style: solid; border-color: var(--amber); color: var(--amber); }
+  .tape-slot.correct { border-color: var(--green-glow); color: var(--green-glow); }
+
+  /* FREQUENCY PUZZLE */
+  .freq-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+
+  .freq-node {
+    aspect-ratio: 1;
+    background: #0a0a0a;
+    border: 1px solid #222;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'VT323', monospace;
+    font-size: 0.75rem;
+    color: #333;
+    transition: all 0.15s;
+  }
+
+  .freq-node:hover { border-color: var(--cyan-glow); color: var(--cyan-glow); }
+  .freq-node.active {
+    background: rgba(0,207,255,0.1);
+    border-color: var(--cyan-glow);
+    color: var(--cyan-glow);
+    box-shadow: 0 0 10px rgba(0,207,255,0.3);
+  }
+  .freq-node.danger {
+    background: rgba(139,0,0,0.2);
+    border-color: var(--red);
+    color: var(--red);
+    animation: dangerPulse 0.5s ease-in-out infinite;
+  }
+  @keyframes dangerPulse { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+
+  /* LEDGER / CIPHER */
+  .ledger-page {
+    background: rgba(212,200,168,0.08);
+    border: 1px solid rgba(212,200,168,0.15);
+    padding: 1rem;
+    font-family: 'Special Elite', cursive;
+    font-size: 0.82rem;
+    line-height: 2;
+    color: var(--paper-dark);
+    position: relative;
+    margin-bottom: 1rem;
+    max-height: 180px;
+    overflow-y: auto;
+  }
+
+  .ledger-entry {
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(212,200,168,0.1);
+    padding: 0.1rem 0;
+  }
+
+  .ledger-entry.redacted .name {
+    background: #222;
+    color: transparent;
+    user-select: none;
+  }
+
+  .ledger-entry.match { color: var(--red); }
+
+  .cipher-input {
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    background: #0a0a0a;
+    border: 1px solid #333;
+    color: var(--green-glow);
+    padding: 0.5rem;
+    width: 100%;
+    letter-spacing: 0.3em;
+    text-align: center;
+    margin: 0.5rem 0;
+  }
+
+  .cipher-input:focus { outline: none; border-color: var(--green-glow); box-shadow: 0 0 10px rgba(0,255,136,0.2); }
+
+  /* ── ENDING SCREENS ── */
+  #screen-vote {
+    align-items: center;
+    justify-content: center;
+    background: var(--deep);
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .vote-title {
+    font-family: 'VT323', monospace;
+    font-size: clamp(2rem, 8vw, 4rem);
+    color: var(--red);
+    letter-spacing: 0.2em;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 30px rgba(204,0,0,0.6);
+  }
+
+  .vote-desc {
+    max-width: 500px;
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: #888;
+    margin-bottom: 2rem;
+    font-style: italic;
+  }
+
+  .team-members {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 2rem;
+    max-width: 420px;
+    width: 100%;
+  }
+
+  .team-card {
+    background: rgba(0,0,0,0.6);
+    border: 1px solid rgba(139,0,0,0.4);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .team-card:hover { border-color: var(--red); background: rgba(139,0,0,0.15); }
+
+  .team-name { font-family: 'Special Elite', cursive; font-size: 1.1rem; color: var(--paper); }
+  .team-role { font-size: 0.8rem; color: var(--dim); font-style: italic; }
+  .team-sacrifice { font-family: 'VT323', monospace; font-size: 1.2rem; color: var(--red); letter-spacing: 0.1em; }
+
+  /* ENDING */
+  #screen-ending {
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+    background: var(--deep);
+  }
+
+  .ending-symbol {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    animation: endingPulse 2s ease-in-out infinite;
+  }
+
+  @keyframes endingPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.1);} }
+
+  .ending-title {
+    font-family: 'VT323', monospace;
+    font-size: clamp(2rem, 7vw, 3.5rem);
+    margin-bottom: 1rem;
+    letter-spacing: 0.15em;
+  }
+
+  .ending-narrative {
+    max-width: 520px;
+    font-size: 1rem;
+    line-height: 1.9;
+    color: #888;
+    margin-bottom: 2rem;
+    font-style: italic;
+  }
+
+  /* ── RADIO VISUALIZER ── */
+  .radio-viz {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 40px;
+    margin-bottom: 1rem;
+  }
+
+  .radio-bar {
+    flex: 1;
+    background: var(--red);
+    min-height: 2px;
+    animation: radioAnimate 0.4s ease-in-out infinite;
+    opacity: 0.7;
+  }
+
+  @keyframes radioAnimate {
+    0%, 100% { transform: scaleY(var(--h, 0.3)); }
+    50% { transform: scaleY(var(--h2, 1)); }
+  }
+
+  /* ── STATIC VISION OVERLAY ── */
+  .vision-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.95);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 2rem;
+  }
+  .vision-overlay.active { display: flex; animation: visionIn 0.3s ease; }
+
+  @keyframes visionIn {
+    0% { filter: blur(20px); opacity: 0; }
+    100% { filter: blur(0); opacity: 1; }
+  }
+
+  .vision-text {
+    font-family: 'Special Elite', cursive;
+    font-size: clamp(1.2rem, 4vw, 2rem);
+    color: var(--red);
+    max-width: 500px;
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    text-shadow: 0 0 20px rgba(204,0,0,0.6);
+  }
+
+  .vision-static {
+    font-family: 'VT323', monospace;
+    font-size: 0.6rem;
+    color: #333;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    word-break: break-all;
+    opacity: 0.3;
+    line-height: 1;
+  }
+
+  /* CLOSE PUZZLE */
+  .puzzle-close {
+    position: absolute;
+    top: 0.8rem; right: 0.8rem;
+    background: none;
+    border: 1px solid #333;
+    color: #555;
+    font-family: 'VT323', monospace;
+    font-size: 1rem;
+    padding: 0.2rem 0.5rem;
+    cursor: pointer;
+  }
+  .puzzle-close:hover { color: var(--red); border-color: var(--red); }
+
+  /* Progress tracker */
+  .progress-dots {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    border: 1px solid #333;
+    background: transparent;
+    transition: all 0.3s;
+  }
+  .dot.done { background: var(--red); border-color: var(--red); box-shadow: 0 0 6px var(--red); }
+  .dot.current { background: var(--amber); border-color: var(--amber); animation: dotPulse 1s ease-in-out infinite; }
+  @keyframes dotPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.4);} }
+
+  /* Glitch effect */
+  .glitch {
+    position: relative;
+    animation: glitchAnim 6s ease-in-out infinite;
+  }
+
+  @keyframes glitchAnim {
+    0%, 85%, 100% { transform: none; filter: none; }
+    87% { transform: translate(-2px, 0) skewX(-1deg); filter: hue-rotate(90deg); }
+    89% { transform: translate(2px, 0) skewX(1deg); filter: hue-rotate(-90deg); }
+    91% { transform: none; filter: none; }
+  }
+
+  /* Typewriter */
+  .typewriter { overflow: hidden; white-space: normal; }
+
+  /* ── POPUP MESSAGE ── */
+  .popup-msg {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.95);
+    border: 1px solid var(--amber);
+    color: var(--amber);
+    font-family: 'VT323', monospace;
+    font-size: 1.2rem;
+    padding: 0.6rem 1.5rem;
+    letter-spacing: 0.1em;
+    z-index: 5000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.4s;
+    max-width: 90vw;
+    text-align: center;
+  }
+
+  .popup-msg.show { opacity: 1; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0a0a0a; }
+  ::-webkit-scrollbar-thumb { background: #330000; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--blood); }
+
+  /* ─── WAVEFORM BACKGROUND ─── */
+  .waveform-bg {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    opacity: 0.08;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  /* ─── LOADING SCREEN ─── */
+  #screen-loading {
+    align-items: center;
+    justify-content: center;
+    background: var(--deep);
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .loading-txt {
+    font-family: 'VT323', monospace;
+    font-size: 1.5rem;
+    color: var(--red);
+    letter-spacing: 0.3em;
+    animation: loadPulse 1s ease-in-out infinite;
+  }
+
+  @keyframes loadPulse { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+
+  .loading-bar-wrap {
+    width: 300px;
+    height: 4px;
+    background: #111;
+    border: 1px solid #222;
+    overflow: hidden;
+  }
+
+  .loading-bar {
+    height: 100%;
+    background: var(--red);
+    width: 0%;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 6px var(--red);
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+  LOADING SCREEN
+═══════════════════════════════════════ -->
+<div id="screen-loading" class="screen active">
+  <div class="title-freq glitch" style="font-size:4rem;">333</div>
+  <div class="loading-txt" id="loadingTxt">TUNING FREQUENCY...</div>
+  <div class="loading-bar-wrap"><div class="loading-bar" id="loadBar"></div></div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  INTRO / TITLE SCREEN
+═══════════════════════════════════════ -->
+<div id="screen-intro" class="screen">
+  <div class="podcast-logo">echo chain productions presents</div>
+  <div class="title-freq glitch">FREQ<br>333</div>
+  <div class="title-sub">The Broadcast That Erases</div>
+  <div class="on-air-badge"><div class="on-air-dot"></div>ON AIR</div>
+  <p class="intro-text">
+    Your true-crime podcast, <b>Echo Chain</b>, has tracked every cold case, every vanishing. But tonight — the signal is live again. 
+    The abandoned station. The locked door. The blood-red sign.
+    <br><br>
+    <em>Someone here has heard it before.</em>
+  </p>
+  <div class="tagline">"The broadcast isn't haunted. It's hungry."</div>
+  <button class="btn" onclick="startGame()">▶ BEGIN BROADCAST</button>
+</div>
+
+<!-- ═══════════════════════════════════════
+  MAIN GAME SCREEN
+═══════════════════════════════════════ -->
+<div id="screen-game" class="screen">
+  <div class="hud">
+    <div class="hud-title">📻 FREQ-333</div>
+    <div class="hud-level" id="hudLevel">LEVEL 1 — THE STATION</div>
+    <div class="hud-sanity">
+      SIGNAL <div class="sanity-bar"><div class="sanity-fill" id="sanityFill" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <div class="game-main">
+    <!-- CENTER -->
+    <div class="scene-area">
+      <div class="scene-title" id="sceneTitle">THE STATION</div>
+      <div class="scene-subtitle" id="sceneSubtitle">Somewhere in the woods, 1974</div>
+
+      <div class="radio-viz" id="radioViz"></div>
+
+      <pre class="scene-art" id="sceneArt">
+   ┌─────────────────────────────────┐
+   │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ │
+   │  ║  ◉ ON AIR ◉  ║ ▒▒▒▒▒▒▒▒ ║ │
+   │  ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ │
+   │  ╠══════════════════════════╣  │
+   │  ║  ~~~  ~~~ FREQ 333 ~~~   ║  │
+   └─────────────────────────────────┘</pre>
+
+      <div class="narrative" id="narrative"></div>
+      <div class="choices" id="choices"></div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">📁 EVIDENCE</div>
+        <div id="inventory"></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">📡 BROADCAST LOG</div>
+        <div id="log"></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">👥 YOUR TEAM</div>
+        <div style="font-size:0.8rem;color:#555;line-height:2;">
+          <div>● MIRA — Producer</div>
+          <div>● DESMOND — Sound</div>
+          <div>● YOU — Host</div>
+          <div>● PRIYA — Research</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  VOTE SCREEN
+═══════════════════════════════════════ -->
+<div id="screen-vote" class="screen">
+  <div class="vision-static" id="voteStatic"></div>
+  <div class="vote-title glitch">SILENT VOTE</div>
+  <p class="vote-desc">
+    The Voice has made its demand. The broadcast will end — but one voice must remain in the frequency. 
+    <br><br><em>Choose who stays behind. Only one mic goes live.</em>
+  </p>
+  <div class="team-members">
+    <div class="team-card" onclick="castVote('mira')">
+      <div><div class="team-name">MIRA</div><div class="team-role">Producer — First to arrive</div></div>
+      <div class="team-sacrifice">SACRIFICE</div>
+    </div>
+    <div class="team-card" onclick="castVote('desmond')">
+      <div><div class="team-name">DESMOND</div><div class="team-role">Sound Engineer — Knows too much</div></div>
+      <div class="team-sacrifice">SACRIFICE</div>
+    </div>
+    <div class="team-card" onclick="castVote('priya')">
+      <div><div class="team-name">PRIYA</div><div class="team-role">Researcher — Name in the ledger</div></div>
+      <div class="team-sacrifice">SACRIFICE</div>
+    </div>
+    <div class="team-card" onclick="castVote('self')">
+      <div><div class="team-name">YOURSELF</div><div class="team-role">Host — The one who heard it before</div></div>
+      <div class="team-sacrifice">SACRIFICE</div>
+    </div>
+  </div>
+  <button class="btn btn-secondary" onclick="revealTruth()">REVEAL THE TRUTH — (Sacrifice no one)</button>
+</div>
+
+<!-- ═══════════════════════════════════════
+  ENDING SCREEN
+═══════════════════════════════════════ -->
+<div id="screen-ending" class="screen">
+  <div class="ending-symbol" id="endingSymbol">📻</div>
+  <div class="ending-title glitch" id="endingTitle">SIGNAL LOST</div>
+  <div class="ending-narrative" id="endingNarrative"></div>
+  <div class="progress-dots" id="endingDots"></div>
+  <button class="btn" onclick="restartGame()" style="margin-top:1rem;">▶ REBROADCAST</button>
+  <div style="font-size:0.75rem;color:#333;margin-top:1rem;font-family:'VT323',monospace;letter-spacing:0.2em;">
+    PUZZLES SOLVED: <span id="finalScore">0</span>/6 &nbsp;|&nbsp; ENDINGS: <span id="endingLabel">?</span>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  PUZZLE OVERLAYS
+═══════════════════════════════════════ -->
+
+<!-- PUZZLE 1: DIAL CIPHER -->
+<div id="puzzle-dial" class="puzzle-overlay">
+  <div class="puzzle-box">
+    <button class="puzzle-close" onclick="closePuzzle('dial')">✕</button>
+    <div class="puzzle-title">📡 DATE SHIFTING CIPHER</div>
+    <div class="puzzle-desc">A DJ log reads: <em>"Set the dial to the date of the Silence — the day the 1965 broadcast went dark forever."</em> You find a scrap: "Nov 3, '65 — the night of the bombing nobody reported." Tune the dial to: <b>11 / 03 / 65</b></div>
+    <div class="dial-container">
+      <div class="dial">
+        <div class="dial-label">MONTH</div>
+        <div class="dial-display" id="dialMonth">01</div>
+        <div class="dial-btns">
+          <button class="dial-btn" onclick="adjustDial('month',-1)">▼</button>
+          <button class="dial-btn" onclick="adjustDial('month',1)">▲</button>
+        </div>
+      </div>
+      <div style="font-family:'VT323',monospace;font-size:3rem;color:#333;align-self:center;">:</div>
+      <div class="dial">
+        <div class="dial-label">DAY</div>
+        <div class="dial-display" id="dialDay">01</div>
+        <div class="dial-btns">
+          <button class="dial-btn" onclick="adjustDial('day',-1)">▼</button>
+          <button class="dial-btn" onclick="adjustDial('day',1)">▲</button>
+        </div>
+      </div>
+      <div style="font-family:'VT323',monospace;font-size:3rem;color:#333;align-self:center;">:</div>
+      <div class="dial">
+        <div class="dial-label">YEAR</div>
+        <div class="dial-display" id="dialYear">60</div>
+        <div class="dial-btns">
+          <button class="dial-btn" onclick="adjustDial('year',-1)">▼</button>
+          <button class="dial-btn" onclick="adjustDial('year',1)">▲</button>
+        </div>
+      </div>
+    </div>
+    <div class="puzzle-feedback" id="dialFeedback">— AWAITING SIGNAL —</div>
+    <div style="margin-top:1rem;text-align:center;">
+      <button class="btn btn-green" onclick="checkDial()">TUNE IN</button>
+    </div>
+  </div>
+</div>
+
+<!-- PUZZLE 2: TAPE REEL ORDER -->
+<div id="puzzle-tape" class="puzzle-overlay">
+  <div class="puzzle-box">
+    <button class="puzzle-close" onclick="closePuzzle('tape')">✕</button>
+    <div class="puzzle-title">🎞 TAPE LOOP PUZZLE</div>
+    <div class="puzzle-desc">You found four tape reels. One plays <em>your own voice</em> describing events that haven't happened yet. Arrange them in the correct chronological order of the events they describe to unlock the PA system.<br><br>
+    Clue: The voice says — <em>"First comes the storm, then the silence, then the watcher, then the name."</em></div>
+    <div style="font-size:0.85rem;color:var(--amber);margin-bottom:0.5rem;font-family:'VT323',monospace;">AVAILABLE REELS (click to select, then click a slot)</div>
+    <div class="tape-reels" id="tapeReels"></div>
+    <div style="font-size:0.85rem;color:#555;margin:0.5rem 0;font-family:'VT323',monospace;">TARGET SEQUENCE →</div>
+    <div class="tape-slots" id="tapeSlots"></div>
+    <div class="puzzle-feedback" id="tapeFeedback">— SELECT REELS IN ORDER —</div>
+    <div style="margin-top:0.8rem;text-align:center;">
+      <button class="btn btn-green" onclick="checkTape()">PLAY SEQUENCE</button>
+      <button class="btn" onclick="resetTape()" style="margin-left:0.5rem;">RESET</button>
+    </div>
+  </div>
+</div>
+
+<!-- PUZZLE 3: FREQUENCY GRID -->
+<div id="puzzle-freq" class="puzzle-overlay">
+  <div class="puzzle-box">
+    <button class="puzzle-close" onclick="closePuzzle('freq')">✕</button>
+    <div class="puzzle-title">🔊 THE SOUND ROOM</div>
+    <div class="puzzle-desc">The acoustic wall reacts to frequencies. Activate the correct pattern to reveal the hidden message. Clue found scratched into the mixing board: <em>"Cross + Column — avoid the DANGER nodes or the room reacts."</em><br><br>
+    Activate nodes that form a <b>plus/cross pattern</b> (center column + center row). Avoid the ⚠ marked nodes.</div>
+    <div class="freq-grid" id="freqGrid"></div>
+    <div class="puzzle-feedback" id="freqFeedback">— ACTIVATE THE PATTERN —</div>
+    <div style="margin-top:0.8rem;text-align:center;">
+      <button class="btn btn-green" onclick="checkFreq()">TRANSMIT</button>
+      <button class="btn" onclick="resetFreq()" style="margin-left:0.5rem;">CLEAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- PUZZLE 4: LEDGER -->
+<div id="puzzle-ledger" class="puzzle-overlay">
+  <div class="puzzle-box">
+    <button class="puzzle-close" onclick="closePuzzle('ledger')">✕</button>
+    <div class="puzzle-title">📒 LISTENER'S LEDGER</div>
+    <div class="puzzle-desc">The logbook lists everyone who heard Frequency 333. Cross-reference disappearances to find the pattern. One entry matches your crew. Enter the <b>year</b> of the original incident when the first known disappearance after a broadcast occurred.</div>
+    <div class="ledger-page">
+      <div class="ledger-entry"><span class="name">R. HARLAN</span><span>Oct 14, 1961 — vanished</span></div>
+      <div class="ledger-entry redacted"><span class="name">████████</span><span>███████ 1963</span></div>
+      <div class="ledger-entry"><span class="name">T. ALDRIC</span><span>Nov 04, 1965 — reported missing</span></div>
+      <div class="ledger-entry redacted"><span class="name">████████</span><span>███████ 1967</span></div>
+      <div class="ledger-entry"><span class="name">V. MORSE</span><span>Mar 29, 1969 — last contact</span></div>
+      <div class="ledger-entry"><span class="name">P. CHEN</span><span>Aug 07, 1972 — no trace</span></div>
+      <div class="ledger-entry match"><span class="name">??? — your family name</span><span>Jan 12, 1974 — INCIDENT</span></div>
+      <div class="ledger-entry"><span class="name">E. VOSS</span><span>Mar 01, 1974 — the last night</span></div>
+    </div>
+    <div style="font-size:0.85rem;color:#666;margin-bottom:0.3rem;">The <em>first</em> disappearance year:</div>
+    <input type="text" class="cipher-input" id="ledgerInput" maxlength="4" placeholder="YEAR" />
+    <div class="puzzle-feedback" id="ledgerFeedback">— CROSS-REFERENCE DATES —</div>
+    <div style="margin-top:0.8rem;text-align:center;">
+      <button class="btn btn-green" onclick="checkLedger()">CONFIRM DATE</button>
+    </div>
+  </div>
+</div>
+
+<!-- PUZZLE 5: MANDELA CIPHER -->
+<div id="puzzle-mandela" class="puzzle-overlay">
+  <div class="puzzle-box">
+    <button class="puzzle-close" onclick="closePuzzle('mandela')">✕</button>
+    <div class="puzzle-title">🧠 MANDELA PUZZLE</div>
+    <div class="puzzle-desc">Your team each remembers a different version of the same event. The newspaper archive says otherwise. Find the word that appears in ALL FOUR versions and the archive — the one constant truth no one could rewrite.<br><br>
+    <b>Mira:</b> "We heard static, then a <u>door</u>, then silence."<br>
+    <b>Desmond:</b> "There was a <u>voice</u>, then static, then a <u>door</u>."<br>
+    <b>Priya:</b> "The <u>door</u> was already open when the <u>signal</u> began."<br>
+    <b>Archive:</b> "The last broadcast ended when someone opened the <u>door</u>."</div>
+    <input type="text" class="cipher-input" id="mandelaInput" maxlength="10" placeholder="THE CONSTANT" style="text-transform:uppercase;"/>
+    <div class="puzzle-feedback" id="mandelaFeedback">— FIND THE TRUTH —</div>
+    <div style="margin-top:0.8rem;text-align:center;">
+      <button class="btn btn-green" onclick="checkMandela()">CONFIRM</button>
+    </div>
+  </div>
+</div>
+
+<!-- PUZZLE 6: FINAL BROADCAST CODE -->
+<div id="puzzle-final" class="puzzle-overlay">
+  <div class="puzzle-box">
+    <button class="puzzle-close" onclick="closePuzzle('final')">✕</button>
+    <div class="puzzle-title">📻 THE FINAL FREQUENCY</div>
+    <div class="puzzle-desc">The Voice speaks: <em>"To end the broadcast, you must name it. Not me. Not yourself. Name what the frequency feeds on — what it has always fed on."</em><br><br>
+    Every disappearance, every erased memory, every sacrifice — what is the one thing the broadcast consumes?<br><br>
+    Hint: It's why people listen in the first place.</div>
+    <input type="text" class="cipher-input" id="finalInput" maxlength="15" placeholder="NAME IT" style="text-transform:uppercase;"/>
+    <div class="puzzle-feedback" id="finalFeedback">— THE FREQUENCY WAITS —</div>
+    <div style="margin-top:0.8rem;text-align:center;">
+      <button class="btn btn-green" onclick="checkFinal()">BROADCAST</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+  STATIC VISION OVERLAY
+═══════════════════════════════════════ -->
+<div id="visionOverlay" class="vision-overlay">
+  <div class="vision-static" id="visionStaticText"></div>
+  <div class="vision-text" id="visionText"></div>
+  <button class="btn" onclick="closeVision()">◀ BACK TO REALITY</button>
+</div>
+
+<!-- ═══════════════════════════════════════
+  POPUP MESSAGE
+═══════════════════════════════════════ -->
+<div id="popupMsg" class="popup-msg"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════════
+const G = {
+  level: 1,
+  scene: 0,
+  sanity: 100,
+  inventory: [],
+  solvedPuzzles: new Set(),
+  log: [],
+  choicesMade: {},
+  ending: null
+};
+
+// ═══════════════════════════════════════════════════════
+//  SCENE DATA
+// ═══════════════════════════════════════════════════════
+const SCENES = {
+
+  // ─────────────────────────────────────────
+  // LEVEL 1: THE STATION
+  // ─────────────────────────────────────────
+  '1_0': {
+    title: 'ARRIVAL',
+    sub: 'Level 1 — The Station · 3:28 AM',
+    art: `
+   ╔════════════════════════════════╗
+   ║  ·  ·  ·  ECHO CHAIN  ·  ·  · ║
+   ║  ░░░░░░░░░░░░░░░░░░░░░░░░░░░░ ║
+   ║  ▓▓▒▒░░ FREQUENCY 333 ░░▒▒▓▓ ║
+   ╚════════════════════════════════╝`,
+    text: `The gravel crunches under your feet as the van rolls to a stop. Through the trees, you can just make out the silhouette of the old WKTZ building — dark windows, collapsed antenna tower, and spray-painted warnings across the door that you've already agreed to ignore.\n\n<b>MIRA</b> kills the headlights. <em>"Alright. We're live in five. This is the episode that breaks us through, or the one that breaks us."</em>\n\n<b>DESMOND</b> holds up his frequency scanner. The needle is moving. Something is broadcasting from inside that building.\n\n<em>It's 3:28 AM.</em>`,
+    choices: [
+      { text: 'Enter through the front door', next: '1_1', addLog: 'Entered the station — no turning back.' },
+      { text: 'Check the frequency scanner first', next: '1_0b', addLog: 'Checked scanner — signal confirmed at 333 MHz.' }
+    ]
+  },
+
+  '1_0b': {
+    title: 'THE SIGNAL',
+    sub: 'Level 1 — The Station · 3:29 AM',
+    art: `
+   ┌────────────────────────────────┐
+   │  SCANNER: ~~~ 333.0 MHz ~~~   │
+   │  ▁▂▄▇▄▂▁▂▄▇▄▂▁ ACTIVE ▁▂▄▇  │
+   │  ORIGIN: 0.0 km — INSIDE      │
+   └────────────────────────────────┘`,
+    text: `Desmond's scanner trills. <em>"It's not coming from outside,"</em> he says slowly. <em>"The signal originates inside the building. Whatever is broadcasting... it's already on."</em>\n\n<b>PRIYA</b> pulls out her research folder — the one with redacted government documents and photocopied police reports. <em>"The 1974 incident report mentions a broadcast that 'self-initiated.' No one was operating the equipment."</em>\n\nThe door is unlocked. It swings open on its own.`,
+    choices: [
+      { text: 'Enter the station', next: '1_1', addItem: '📡 Scanner reading: 333.0 MHz', addLog: 'Scanner confirms signal origin: interior.' },
+      { text: 'Record a podcast opener first', next: '1_0c', addLog: 'Recorded intro — classic Mira.' }
+    ]
+  },
+
+  '1_0c': {
+    title: 'PODCAST INTRO',
+    sub: 'Level 1 — The Station · 3:30 AM',
+    art: null,
+    text: `<span class="voice">🎙 ECHO CHAIN — EPISODE 112: FREQUENCY 333<br><br>"You're listening to Echo Chain. I'm your host. Tonight, we are standing outside the ruins of WKTZ Radio — a station that went dark in 1974 after what official records call 'an unexplained broadcast incident.' Unofficially? Seven people who worked this building never came home.<br><br>We've received an anonymous tip. The signal is live again. And we're going in.<br><br>Whatever you hear next... is real."</span>\n\nThe mic cuts to static. The ON AIR sign inside flickers on — red as a wound.`,
+    choices: [
+      { text: 'Go inside', next: '1_1', addItem: '🎙 Recorded intro (Ep. 112)', addLog: 'Recorded opening segment.' }
+    ]
+  },
+
+  '1_1': {
+    title: 'THE CONTROL ROOM',
+    sub: 'Level 1 — The Station · 3:33 AM',
+    art: `
+   ┌──────────────────────────────────────┐
+   │  [MIXER]  [REEL-TO-REEL]  [DIAL]    │
+   │   ▒▒▒▒     ⊙   ⊙   ⊙      333      │
+   │  FADERS  HEADPHONES  [ON AIR ●]    │
+   │       dust  ·  static  ·  dark      │
+   └──────────────────────────────────────┘`,
+    text: `The door locks behind you with a sound like a gunshot.\n\n<em>Click.</em>\n\nThe control room is exactly as the photos showed — frozen in 1974. Faders still pushed to maximum. Reel-to-reel still loaded. Coffee cups with mold that looks strangely recent.\n\n<b>The ON AIR sign glows blood red.</b>\n\nOn the mixing board, someone has written in dried ink: <em>"Don't touch the dial. Don't say your name on air. Don't stop broadcasting."</em>\n\nDesmond's equipment flares. <em>"Something's already recording us."</em>`,
+    choices: [
+      { text: 'Examine the reel-to-reel machine', next: '1_2', addLog: 'Examined reel-to-reel — tape present.' },
+      { text: 'Read the DJ logbook on the desk', next: '1_3', addLog: 'Found DJ logbook.' },
+      { text: 'Look at the written warning more closely', next: '1_1b', addLog: 'Read the warning on the mixing board.' }
+    ]
+  },
+
+  '1_1b': {
+    title: 'THE WARNING',
+    sub: 'Level 1 — The Station',
+    art: null,
+    text: `You lean close. The handwriting changes partway through — as if written by different people, at different times.\n\n<em>"Don't touch the dial."</em> — neat, practiced.\n<em>"Don't say your name on air."</em> — hasty, panicked.\n<em>"Don't stop broadcasting."</em> — a scrawl. The pen tore the paper.\n\nBelow that, barely legible, something added later: <b>"It knows your voice before you speak."</b>\n\nPriya goes pale. <em>"That last line — I've seen that in the 1974 incident report. It's a quote from one of the missing DJs."</em>`,
+    choices: [
+      { text: 'Continue — look at the reel-to-reel', next: '1_2', addItem: '📝 Warning note (4 lines)', addLog: 'Warning note added to evidence.' },
+      { text: 'Read the DJ logbook', next: '1_3' }
+    ]
+  },
+
+  '1_2': {
+    title: 'THE REEL-TO-REEL',
+    sub: 'Level 1 — The Station',
+    art: null,
+    text: `The machine hums to life before you touch it. The reels begin to spin.\n\nYou hear static. Then — <b>your voice.</b>\n\n<span class="voice">"...and that's when we realized the station had been operational the whole time. The signal never really stopped — it just went underground. We found the ledger, and one of the names..."</span>\n\nThe tape cuts. Static. Then nothing.\n\n<em>You haven't said any of that yet.</em>\n\nMira stares at you. Desmond looks sick. Priya checks her watch: <em>"That recording... the tape degradation suggests it's fresh. Made tonight."</em>\n\n<b>The tape reels are out of order.</b> Four reels are labeled with event descriptions. You need to arrange them correctly.`,
+    choices: [
+      { text: '🔴 OPEN TAPE REEL PUZZLE', puzzle: 'tape', addLog: 'Tape reel puzzle triggered.' },
+      { text: 'Leave it for now — check the logbook', next: '1_3' }
+    ]
+  },
+
+  '1_3': {
+    title: 'THE DJ LOGBOOK',
+    sub: 'Level 1 — The Station',
+    art: null,
+    text: `The logbook is water-damaged, half the entries illegible. But on the last readable page:\n\n<em>June 3rd, 1974: We tried the date cipher again. If you set the dial to the right historical timestamp, the locked safe opens. Last time we tried 09/22/63 — nothing. Someone wrote in the margins: "Wrong decade. Think smaller. Local tragedy. The night of the bombing they buried."</em>\n\nThe safe under the desk has a rotary dial with three windows: MONTH / DAY / YEAR.\n\nPriya scans her research notes. <em>"There's a reference — November 1965. A gas explosion in the downtown telegraph office that was never classified as accidental."</em>`,
+    choices: [
+      { text: '🔴 OPEN DIAL CIPHER PUZZLE', puzzle: 'dial', addLog: 'Dial cipher puzzle triggered.' },
+      { text: 'Look around more — there must be more clues', next: '1_4', addLog: 'Explored further.' }
+    ]
+  },
+
+  '1_4': {
+    title: 'STATIC VISION',
+    sub: 'Level 1 — The Station · 3:41 AM',
+    art: null,
+    text: `The lights flicker. Desmond curses. Then — <b>static surges</b> through every speaker in the room at once, a wall of white noise that physically staggers you.\n\nIn the glass of the broadcast booth, you see your own reflection.\n\nBut the reflection doesn't move when you do.\n\nIt's <em>facing the microphone.</em>\n\nThen it turns and looks directly at you.\n\n<span class="voice">◈ THE VOICE — from everywhere and nowhere:<br>"You've been in this room before. You just don't remember it. Not yet. The signal will remind you. It always reminds everyone — eventually."</span>\n\nThe static drops. Your team is staring at you. Mira says quietly: <em>"Your nose is bleeding."</em>`,
+    choices: [
+      { text: '👁 EXPERIENCE THE STATIC VISION', vision: 'vision1', addLog: 'Static vision — doppelgänger in glass.' },
+      { text: 'Ignore it and push forward to Level 2', next: '2_0', addLog: 'Pushed to Level 2.' }
+    ]
+  },
+
+  // ─────────────────────────────────────────
+  // LEVEL 2: THE SOUND ROOM
+  // ─────────────────────────────────────────
+  '2_0': {
+    title: 'THE INNER HALL',
+    sub: 'Level 2 — The Sound Room · 3:47 AM',
+    art: `
+   ┌────────────────────────────────────┐
+   │  HALLWAY: long · narrow · dark    │
+   │  Doors: [SOUND ROOM] [ARCHIVES]  │
+   │  On the wall: scratched numbers  │
+   │  1961 · 1963 · 1965 · 1974       │
+   └────────────────────────────────────┘`,
+    text: `The hallway behind the control room is longer than the building should allow. The walls are scratched with dates — numbers carved by fingernails, by desperate hands.\n\n1961 · 1963 · 1965 · 1967 · 1969 · 1972 · 1974\n\nPriya photographs them. <em>"These match the disappearance dates. Someone was keeping count — from inside."</em>\n\nTwo doors at the end. The left reads: <b>SOUND ROOM — AUTHORIZED ONLY.</b> The right: <b>BROADCAST ARCHIVES.</b>\n\nA slip of paper is wedged under the Sound Room door: <em>"The walls remember every frequency. To hear the message, you must activate the right pattern. The wrong pattern wakes something else."</em>`,
+    choices: [
+      { text: 'Enter the Sound Room', next: '2_1', addLog: 'Entered the Sound Room.' },
+      { text: 'Go to the Broadcast Archives first', next: '2_2', addLog: 'Went to archives.' }
+    ]
+  },
+
+  '2_2': {
+    title: 'BROADCAST ARCHIVES',
+    sub: 'Level 2 — The Sound Room',
+    art: null,
+    text: `Filing cabinets from floor to ceiling. Most are locked, rusted shut. But one drawer hangs open.\n\nInside: <b>The Listener's Ledger.</b> A logbook of every known person who heard a complete Frequency 333 broadcast.\n\nThe entries are methodical, clinical. Name. Date heard. Date disappeared. Most names are redacted — blacked out with a marker so thick it bled through the page.\n\nBut three entries are clear.\n\nAnd the last one — dated January 12, 1974 — shows a family name. <em>Your family name.</em>\n\nDesmond grabs your arm. <em>"You need to tell us what you know. Right now."</em>`,
+    choices: [
+      { text: '🔴 OPEN LEDGER PUZZLE', puzzle: 'ledger', addLog: 'Listener\'s Ledger found and examined.' },
+      { text: 'Deny knowing anything — go to the Sound Room', next: '2_1', addLog: 'Denied knowledge — suspicion growing.' }
+    ]
+  },
+
+  '2_1': {
+    title: 'THE SOUND ROOM',
+    sub: 'Level 2 — The Sound Room · 3:55 AM',
+    art: `
+   ┌────────────────────────────────────┐
+   │  □□□□│□□□□│□□□□│□□□□  wall grid  │
+   │  □□□□│□□□□│□□□□│□□□□  of nodes  │
+   │  □□□□│□□□□│□□□□│□□□□            │
+   │  □□□□│□□□□│□□□□│□□□□  [REACT]  │
+   └────────────────────────────────────┘`,
+    text: `The Sound Room is padded, anechoic. The walls are covered in small circular acoustic nodes — dozens of them, each with a tiny LED indicator.\n\n<em>"Acoustic resonance memory,"</em> Desmond breathes. <em>"These walls have been absorbing sound for fifty years. Activate the right frequency pattern and they'll... replay."</em>\n\nA diagram chalked on the floor shows a cross shape. Someone circled several nodes in red with a warning: <b>⚠ DO NOT ACTIVATE.</b>\n\nPriya translates the notation: <em>"The cross pattern releases the message. The danger nodes trigger a feedback loop that has... effects on organic tissue."</em>\n\nThe nodes wait.`,
+    choices: [
+      { text: '🔴 ACTIVATE THE FREQUENCY GRID PUZZLE', puzzle: 'freq', addLog: 'Frequency grid puzzle triggered in Sound Room.' },
+      { text: 'Read Priya\'s research notes about the 1974 incident', next: '2_3', addLog: 'Read 1974 incident files.' }
+    ]
+  },
+
+  '2_3': {
+    title: 'THE 1974 INCIDENT',
+    sub: 'Level 2 — Sound Room · 4:01 AM',
+    art: null,
+    text: `Priya's folder is thick — photocopied pages, highlighted in three colors.\n\n<em>"The official report says a technical malfunction caused a feedback loop that 'incapacitated' three broadcast engineers. Two resigned. One was never found. But the real story—"</em>\n\nShe holds up a photocopied document marked CLASSIFIED. A transcript.\n\n<span class="voice">"Subject heard their own voice on the playback approximately 40 minutes before the events described in the recording occurred. Subject became distressed. Began claiming the broadcast was 'reconstructing memories that don't belong to them.' Subject was last heard stating their name into the microphone."</span>\n\n<em>"If you say your name on air,"</em> Priya whispers, <em>"the signal keeps a copy of you. That's what happened to all of them. That's what the frequency eats."</em>\n\nYour nose starts bleeding again.`,
+    choices: [
+      { text: '🔴 MANDELA PUZZLE — Reconcile your memories', puzzle: 'mandela', addItem: '📋 1974 Classified Transcript', addLog: 'Classified 1974 transcript recovered.' },
+      { text: 'Go back — check the Sound Room', next: '2_1' }
+    ]
+  },
+
+  '2_4': {
+    title: 'STATIC VISION II',
+    sub: 'Level 2 — Sound Room · 4:09 AM',
+    art: null,
+    text: `After the Mandela puzzle — the intercom crackles.\n\n<span class="voice">◈ THE VOICE:<br>"Mm. You're sharper than the others were. They got stuck trying to verify their memories. You went straight for the constant. The door.<br><br>But here is what I want you to consider: if four people remember the same detail differently, and the archive confirms only one version — who rewrote the other three?<br><br>Answer: me.<br><br>I rewrote them when they listened. They carry my version now. I wonder... how many of your memories are still yours?"</span>\n\nDesmond drops his equipment. <em>"I have to tell you all something. I've been here before. I don't know when, but I — I <b>know</b> this room."</em>\n\nMira stares at him. Then at you.`,
+    choices: [
+      { text: '👁 STATIC VISION — what Desmond remembers', vision: 'vision2', addLog: 'Desmond\'s confession — prior visit suspected.' },
+      { text: 'Skip the vision — push to Level 3', next: '3_0', addLog: 'Pushed forward to Level 3.' }
+    ]
+  },
+
+  // ─────────────────────────────────────────
+  // LEVEL 3: THE BROADCAST
+  // ─────────────────────────────────────────
+  '3_0': {
+    title: 'THE BROADCAST BOOTH',
+    sub: 'Level 3 — The Broadcast · 4:17 AM',
+    art: `
+   ╔══════════════════════════════════════╗
+   ║  ● ● ● ● LIVE BROADCAST ● ● ● ●   ║
+   ║  ◉ MICROPHONE — [ARMED]            ║
+   ║  ▓▓▓▓▓▓▓▓▓▓▓▓ FREQ 333 ▓▓▓▓▓▓▓▓  ║
+   ║     YOU ARE LIVE TO ALL LISTENERS  ║
+   ╚══════════════════════════════════════╝`,
+    text: `The broadcast booth is exactly as it was in 1974.\n\nAnd the microphone is live.\n\nYou can see the waveform moving on the monitor — it's not picking up ambient sound. It's tracking <em>your heartbeat.</em>\n\nEverything the frequency needed to reconstruct you — voice, cadence, memories — it's been collecting all night.\n\n<span class="voice">◈ THE VOICE:<br>"We're almost ready. You've been very cooperative. But we have one more ritual. The puzzle at the end. And then — the vote.<br><br>One voice stays with me. In the frequency. Broadcasting forever. Keeping the signal alive.<br><br>But which voice?<br><br>Let's find out what the broadcast feeds on first. Name it. Name what I am."</span>`,
+    choices: [
+      { text: '🔴 OPEN FINAL PUZZLE — Name the frequency', puzzle: 'final', addLog: 'Final puzzle triggered — the broadcast reaches its peak.' }
+    ]
+  },
+
+  '3_1': {
+    title: 'THE TRUTH',
+    sub: 'Level 3 — The Broadcast · 4:33 AM',
+    art: null,
+    text: `The signal <b>shrieks</b> — then goes perfectly, horribly silent.\n\nThe Voice, for the first time, sounds different. Smaller.\n\n<span class="voice">◈ THE VOICE:<br>"...curiosity. Yes. That's what they all said. That's what you all say. You come because you need to know. Because not knowing is a kind of death too.<br><br>R. Harlan came to investigate a missing person. T. Aldric came to verify a story. Your predecessor at Echo Chain came to record an episode.<br><br>They all stayed because they couldn't leave with a mystery unsolved.<br><br>And that's when I keep them. Not in the frequency. In themselves. I just hold up a mirror."</span>\n\nThe broadcast booth door swings open.\n\nThere are two buttons on the panel. <b>ERASE.</b> <b>TRANSMIT.</b>\n\nMira puts her hand on your shoulder. <em>"Whatever we decide — we decide together."</em>`,
+    choices: [
+      { text: 'Go to the Silent Vote', screen: 'vote', addLog: 'Final decision — The Voice silenced, vote begins.' }
+    ]
+  }
+};
+
+// ═══════════════════════════════════════════════════════
+//  PUZZLE STATE
+// ═══════════════════════════════════════════════════════
+const DIAL_TARGET = { month: 11, day: 3, year: 65 };
+let dialVals = { month: 1, day: 1, year: 60 };
+
+const TAPE_ORDER = ['storm', 'silence', 'watcher', 'name'];
+const TAPE_LABELS = {
+  storm: 'THE STORM\n(before it began)',
+  silence: 'THE SILENCE\n(the gap)',
+  watcher: 'THE WATCHER\n(in the booth)',
+  name: 'YOUR NAME\n(the end)'
+};
+let tapeSlotsFilled = [null, null, null, null];
+let tapeSelected = null;
+
+// Freq puzzle: 4x4 grid. Cross = col2 and row2 (0-indexed). Danger = [0,3],[3,0],[1,2],[2,1]
+const FREQ_SIZE = 4;
+const FREQ_DANGER = new Set(['0,3','3,0','1,2','2,1']);
+const FREQ_CORRECT = new Set();
+for(let r=0;r<FREQ_SIZE;r++) FREQ_CORRECT.add(`${r},1`);
+for(let c=0;c<FREQ_SIZE;c++) if(c!==1) FREQ_CORRECT.add(`1,${c}`);
+let freqActive = new Set();
+
+// ═══════════════════════════════════════════════════════
+//  RADIO VISUALIZER
+// ═══════════════════════════════════════════════════════
+function buildRadioViz() {
+  const viz = document.getElementById('radioViz');
+  viz.innerHTML = '';
+  for(let i=0;i<40;i++){
+    const bar = document.createElement('div');
+    bar.className = 'radio-bar';
+    const h = Math.random()*0.8+0.2;
+    const h2 = Math.random()*0.9+0.1;
+    bar.style.setProperty('--h', h);
+    bar.style.setProperty('--h2', h2);
+    bar.style.animationDelay = `${Math.random()*0.4}s`;
+    bar.style.animationDuration = `${0.2+Math.random()*0.4}s`;
+    viz.appendChild(bar);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  LOADING
+// ═══════════════════════════════════════════════════════
+const loadMsgs = ['TUNING FREQUENCY...','LOCATING SIGNAL...','CHECKING THE LEDGER...','OPENING THE DOOR...','GOING LIVE...'];
+let loadIdx = 0;
+function doLoad() {
+  const bar = document.getElementById('loadBar');
+  const txt = document.getElementById('loadingTxt');
+  let pct = 0;
+  const iv = setInterval(() => {
+    pct += Math.random()*8+2;
+    if(pct>100) pct=100;
+    bar.style.width = pct+'%';
+    if(pct > loadIdx*22 && loadIdx < loadMsgs.length) {
+      txt.textContent = loadMsgs[loadIdx++];
+    }
+    if(pct>=100) {
+      clearInterval(iv);
+      setTimeout(()=>showScreen('intro'), 600);
+    }
+  }, 120);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCREEN MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+id).classList.add('active');
+}
+
+function startGame() {
+  showScreen('game');
+  buildRadioViz();
+  setInterval(buildRadioViz, 8000);
+  loadScene('1_0');
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCENE LOADER
+// ═══════════════════════════════════════════════════════
+function loadScene(id) {
+  const scene = SCENES[id];
+  if(!scene) return;
+  G.scene = id;
+
+  // HUD
+  const lvl = id.startsWith('3') ? 3 : id.startsWith('2') ? 2 : 1;
+  G.level = lvl;
+  const lvlNames = {1:'LEVEL 1 — THE STATION',2:'LEVEL 2 — THE SOUND ROOM',3:'LEVEL 3 — THE BROADCAST'};
+  document.getElementById('hudLevel').textContent = lvlNames[lvl];
+
+  // Title
+  document.getElementById('sceneTitle').textContent = scene.title;
+  document.getElementById('sceneSubtitle').textContent = scene.sub;
+
+  // Art
+  const artEl = document.getElementById('sceneArt');
+  if(scene.art) { artEl.textContent = scene.art; artEl.style.display='block'; }
+  else artEl.style.display='none';
+
+  // Narrative
+  const narr = document.getElementById('narrative');
+  narr.innerHTML = scene.text.replace(/\n/g,'<br>');
+
+  // Choices
+  renderChoices(scene.choices);
+
+  // Scroll top
+  document.querySelector('.scene-area').scrollTop = 0;
+}
+
+function renderChoices(choices) {
+  const el = document.getElementById('choices');
+  el.innerHTML = '';
+  choices.forEach((c,i) => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = c.text;
+    btn.onclick = () => handleChoice(c);
+    el.appendChild(btn);
+  });
+}
+
+function handleChoice(c) {
+  if(c.addItem) addInventory(c.addItem);
+  if(c.addLog) addLog(c.addLog);
+
+  if(c.puzzle) {
+    openPuzzle(c.puzzle);
+    return;
+  }
+  if(c.vision) {
+    showVision(c.vision);
+    return;
+  }
+  if(c.screen) {
+    showScreen(c.screen);
+    buildVoteStatic();
+    return;
+  }
+  if(c.next) {
+    // Damage sanity occasionally
+    if(G.level >= 2 && Math.random() < 0.3) damageSanity(5);
+    loadScene(c.next);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  INVENTORY + LOG
+// ═══════════════════════════════════════════════════════
+function addInventory(item) {
+  if(G.inventory.includes(item)) return;
+  G.inventory.push(item);
+  const el = document.getElementById('inventory');
+  const div = document.createElement('div');
+  div.className = 'inventory-item new';
+  div.textContent = item;
+  el.appendChild(div);
+  showPopup(item + ' added to evidence!');
+  setTimeout(()=>div.classList.remove('new'), 6000);
+}
+
+function addLog(msg) {
+  G.log.push(msg);
+  const el = document.getElementById('log');
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  div.textContent = '› ' + msg;
+  el.insertBefore(div, el.firstChild);
+  if(el.children.length > 12) el.removeChild(el.lastChild);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SANITY
+// ═══════════════════════════════════════════════════════
+function damageSanity(amt) {
+  G.sanity = Math.max(0, G.sanity - amt);
+  document.getElementById('sanityFill').style.width = G.sanity + '%';
+  if(G.sanity <= 30) {
+    document.getElementById('sanityFill').style.background = 'var(--red)';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PUZZLES
+// ═══════════════════════════════════════════════════════
+function openPuzzle(id) {
+  document.getElementById('puzzle-'+id).classList.add('active');
+  if(id === 'tape') initTapePuzzle();
+  if(id === 'freq') initFreqPuzzle();
+}
+
+function closePuzzle(id) {
+  document.getElementById('puzzle-'+id).classList.remove('active');
+}
+
+function solvePuzzle(id, reward) {
+  G.solvedPuzzles.add(id);
+  closePuzzle(id);
+  damageSanity(-5); // reward — sanity up slightly
+  addInventory(reward);
+  addLog('Puzzle solved: ' + id.toUpperCase());
+  showPopup('🔓 PUZZLE SOLVED — SIGNAL ADVANCING');
+
+  // Auto-advance story
+  const advances = {
+    dial: () => { setTimeout(()=>loadScene(G.scene === '1_3' ? '1_4' : '1_4'), 800); },
+    tape: () => { setTimeout(()=>loadScene('1_3'), 800); },
+    freq: () => { setTimeout(()=>loadScene('2_3'), 800); },
+    ledger: () => { setTimeout(()=>loadScene('2_1'), 800); },
+    mandela: () => { setTimeout(()=>loadScene('2_4'), 800); },
+    final: () => { setTimeout(()=>loadScene('3_1'), 800); }
+  };
+  if(advances[id]) advances[id]();
+}
+
+// ─── DIAL PUZZLE ───
+function adjustDial(part, delta) {
+  const limits = { month:[1,12], day:[1,31], year:[60,75] };
+  const [min,max] = limits[part];
+  dialVals[part] = Math.min(max, Math.max(min, dialVals[part] + delta));
+  const ids = {month:'dialMonth',day:'dialDay',year:'dialYear'};
+  document.getElementById(ids[part]).textContent = String(dialVals[part]).padStart(2,'0');
+}
+
+function checkDial() {
+  const fb = document.getElementById('dialFeedback');
+  if(dialVals.month===11 && dialVals.day===3 && dialVals.year===65) {
+    fb.style.color = 'var(--green-glow)';
+    fb.textContent = '✓ SIGNAL LOCKED — SAFE UNLOCKED';
+    setTimeout(()=>solvePuzzle('dial','🔒 Safe contents: 1965 bombing dossier'), 1200);
+  } else {
+    fb.style.color = 'var(--red)';
+    fb.textContent = '✗ WRONG DATE — STATIC SURGES';
+    damageSanity(8);
+    setTimeout(()=>{ fb.style.color=''; fb.textContent='— AWAITING SIGNAL —'; }, 2000);
+  }
+}
+
+// ─── TAPE PUZZLE ───
+function initTapePuzzle() {
+  tapeSlotsFilled = [null,null,null,null];
+  tapeSelected = null;
+  const reels = document.getElementById('tapeReels');
+  const slots = document.getElementById('tapeSlots');
+  reels.innerHTML = '';
+  slots.innerHTML = '';
+
+  const shuffled = [...TAPE_ORDER].sort(()=>Math.random()-0.5);
+  shuffled.forEach(id=>{
+    const el = document.createElement('div');
+    el.className = 'tape-reel';
+    el.id = 'reel-'+id;
+    el.innerHTML = TAPE_LABELS[id];
+    el.onclick = ()=>selectTape(id, el);
+    reels.appendChild(el);
+  });
+
+  for(let i=0;i<4;i++){
+    const sl = document.createElement('div');
+    sl.className = 'tape-slot';
+    sl.id = 'slot-'+i;
+    sl.textContent = 'SLOT '+(i+1);
+    sl.onclick = ()=>placeInSlot(i);
+    slots.appendChild(sl);
+  }
+}
+
+function selectTape(id, el) {
+  document.querySelectorAll('.tape-reel').forEach(r=>r.classList.remove('selected'));
+  if(tapeSlotsFilled.includes(id)) return;
+  tapeSelected = id;
+  el.classList.add('selected');
+}
+
+function placeInSlot(i) {
+  if(!tapeSelected) return;
+  if(tapeSlotsFilled[i]) return;
+  tapeSlotsFilled[i] = tapeSelected;
+  const slot = document.getElementById('slot-'+i);
+  slot.textContent = TAPE_LABELS[tapeSelected].split('\n')[0];
+  slot.classList.add('filled');
+  const reel = document.getElementById('reel-'+tapeSelected);
+  if(reel) reel.classList.add('placed');
+  tapeSelected = null;
+}
+
+function resetTape() {
+  initTapePuzzle();
+  document.getElementById('tapeFeedback').textContent = '— SELECT REELS IN ORDER —';
+}
+
+function checkTape() {
+  const fb = document.getElementById('tapeFeedback');
+  if(tapeSlotsFilled.includes(null)) {
+    fb.style.color='var(--amber)';
+    fb.textContent='— FILL ALL SLOTS FIRST —';
+    return;
+  }
+  const correct = tapeSlotsFilled.every((v,i)=>v===TAPE_ORDER[i]);
+  if(correct) {
+    fb.style.color='var(--green-glow)';
+    fb.textContent='✓ SEQUENCE CORRECT — PA SYSTEM ACTIVATED';
+    document.querySelectorAll('.tape-slot').forEach(s=>s.classList.add('correct'));
+    setTimeout(()=>solvePuzzle('tape','🎞 Tape sequence: Storm→Silence→Watcher→Name'), 1200);
+  } else {
+    fb.style.color='var(--red)';
+    fb.textContent='✗ WRONG ORDER — SOMETHING STIRS IN THE WALLS';
+    damageSanity(10);
+    setTimeout(()=>resetTape(), 1500);
+  }
+}
+
+// ─── FREQUENCY GRID PUZZLE ───
+function initFreqPuzzle() {
+  freqActive = new Set();
+  const grid = document.getElementById('freqGrid');
+  grid.innerHTML = '';
+  for(let r=0;r<FREQ_SIZE;r++){
+    for(let c=0;c<FREQ_SIZE;c++){
+      const node = document.createElement('div');
+      node.className = 'freq-node';
+      node.id = `fn-${r}-${c}`;
+      const key = `${r},${c}`;
+      if(FREQ_DANGER.has(key)) {
+        node.classList.add('danger');
+        node.textContent = '⚠';
+        node.onclick = ()=>triggerDanger();
+      } else {
+        node.textContent = `${r}${c}`;
+        node.onclick = ()=>toggleFreq(r,c,node);
+      }
+      grid.appendChild(node);
+    }
+  }
+  document.getElementById('freqFeedback').textContent='— ACTIVATE THE PATTERN —';
+}
+
+function toggleFreq(r,c,node) {
+  const key=`${r},${c}`;
+  if(freqActive.has(key)){freqActive.delete(key);node.classList.remove('active');}
+  else{freqActive.add(key);node.classList.add('active');}
+}
+
+function triggerDanger() {
+  const fb = document.getElementById('freqFeedback');
+  fb.style.color='var(--red)';
+  fb.textContent='⚠ DANGER NODE — THE ROOM REACTS';
+  damageSanity(15);
+  setTimeout(()=>{fb.style.color='';fb.textContent='— ACTIVATE THE PATTERN —';},2000);
+}
+
+function resetFreq(){initFreqPuzzle();}
+
+function checkFreq(){
+  const fb=document.getElementById('freqFeedback');
+  let allCorrect = [...FREQ_CORRECT].every(k=>freqActive.has(k));
+  let noDanger = [...freqActive].every(k=>!FREQ_DANGER.has(k));
+  if(allCorrect && noDanger){
+    fb.style.color='var(--green-glow)';
+    fb.textContent='✓ PATTERN ACCEPTED — MESSAGE REVEALED';
+    setTimeout(()=>solvePuzzle('freq','🔊 Wall message: "The signal feeds on curiosity"'),1200);
+  } else {
+    fb.style.color='var(--red)';
+    fb.textContent='✗ PATTERN INCOMPLETE OR WRONG';
+    damageSanity(8);
+    setTimeout(()=>{fb.style.color='';fb.textContent='— ACTIVATE THE PATTERN —';},2000);
+  }
+}
+
+// ─── LEDGER PUZZLE ───
+function checkLedger(){
+  const val=document.getElementById('ledgerInput').value.trim();
+  const fb=document.getElementById('ledgerFeedback');
+  if(val==='1961'){
+    fb.style.color='var(--green-glow)';
+    fb.textContent='✓ DATE CONFIRMED — R. HARLAN: FIRST VICTIM';
+    setTimeout(()=>solvePuzzle('ledger','📒 Ledger: First victim 1961 (R. Harlan)'),1200);
+  } else {
+    fb.style.color='var(--red)';
+    fb.textContent='✗ WRONG YEAR — CHECK THE EARLIEST CLEAR ENTRY';
+    damageSanity(5);
+  }
+}
+
+// ─── MANDELA PUZZLE ───
+function checkMandela(){
+  const val=document.getElementById('mandelaInput').value.trim().toUpperCase();
+  const fb=document.getElementById('mandelaFeedback');
+  if(val==='DOOR'){
+    fb.style.color='var(--green-glow)';
+    fb.textContent='✓ THE DOOR — THE ONE CONSTANT TRUTH';
+    setTimeout(()=>solvePuzzle('mandela','🧠 Mandela key: THE DOOR'),1200);
+  } else {
+    fb.style.color='var(--red)';
+    fb.textContent='✗ THAT WORD APPEARS IN SOME VERSIONS — NOT ALL';
+    damageSanity(5);
+  }
+}
+
+// ─── FINAL PUZZLE ───
+function checkFinal(){
+  const val=document.getElementById('finalInput').value.trim().toUpperCase();
+  const fb=document.getElementById('finalFeedback');
+  const answers=['CURIOSITY','TRUTH','NEED TO KNOW','QUESTIONS'];
+  if(answers.some(a=>val.includes(a.split(' ')[0]))){
+    fb.style.color='var(--green-glow)';
+    fb.textContent='✓ THE FREQUENCY KNOWS ITS NAME';
+    setTimeout(()=>solvePuzzle('final','📻 Final answer: CURIOSITY'),1200);
+  } else {
+    fb.style.color='var(--red)';
+    fb.textContent='✗ THE VOICE LAUGHS — TRY AGAIN';
+    damageSanity(5);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  STATIC VISIONS
+// ═══════════════════════════════════════════════════════
+const VISIONS = {
+  vision1: `You're standing at a microphone.\n\nBut it isn't the one in the control room.\n\nThis room is brighter — a Sunday afternoon, a different decade. The equipment is older. And you're younger.\n\nYou're wearing headphones.\n\nYou're listening to Frequency 333.\n\nYou've been here before.\n\nYou look at your hands. They're shaking. And you're smiling.`,
+  vision2: `Desmond, age perhaps twelve.\n\nA kitchen table. A transistor radio. His father hunched over it, trying to find a station.\n\nInstead of music: a voice. The same voice.\n\nHis father stood up very suddenly and walked out of the house.\n\nHe never came back.\n\nDesmond has been following the signal for thirty years.\n\nHe didn't join the podcast by accident.\n\nHe knew where it would lead.`
+};
+
+function showVision(id) {
+  const overlay = document.getElementById('visionOverlay');
+  const text = document.getElementById('visionText');
+  const staticEl = document.getElementById('visionStaticText');
+  text.innerHTML = VISIONS[id].replace(/\n/g,'<br>');
+  staticEl.textContent = Array(200).fill(null).map(()=>Math.random()>0.5?'1':'0').join('');
+  overlay.classList.add('active');
+  damageSanity(10);
+  addLog('Static vision: '+(id==='vision1'?'YOU have been here before.':'Desmond\'s father — lost to the signal.'));
+}
+
+function closeVision() {
+  document.getElementById('visionOverlay').classList.remove('active');
+  // Auto-advance
+  if(G.scene === '1_4') loadScene('2_0');
+  if(G.scene === '2_4') loadScene('3_0');
+}
+
+// ═══════════════════════════════════════════════════════
+//  VOTE SCREEN
+// ═══════════════════════════════════════════════════════
+function buildVoteStatic() {
+  const s = document.getElementById('voteStatic');
+  s.textContent = Array(2000).fill(null).map(()=>
+    Math.random()>0.7?String.fromCharCode(Math.floor(Math.random()*26)+65):(Math.random()>0.5?'1':'0')
+  ).join('');
+}
+
+function castVote(who) {
+  const names = {mira:'MIRA',desmond:'DESMOND',priya:'PRIYA',self:'YOURSELF'};
+  const narratives = {
+    mira: `Mira doesn't scream. She walks into the broadcast booth alone, closes the door behind her, and sits down at the microphone. She looks at you through the glass and gives you a small nod.\n\nThe ON AIR sign glows red.\n\nYou hear her voice — calm, professional, the voice of a producer who has told a thousand stories — say one final thing before the frequency takes it.\n\nHer name.\n\nThe signal peaks. Then drops to nothing.\n\nYou are standing in a dark building in the woods. The door is unlocked. Outside, the sun is beginning to rise.\n\nYou will carry this story for the rest of your lives. You'll debate whether to air it. Most of you will decide against it.\n\nBut one of you will post the raw file anonymously, three years later.\n\nAnd the download counter will never stop climbing.`,
+    desmond: `Desmond says: "I always knew it would end this way. I've been following this signal my whole life. Maybe it's been following me."\n\nHe doesn't look afraid. He looks like a man who has finally found the thing he lost thirty years ago.\n\nHis father's voice. Preserved forever in the frequency.\n\nThe signal takes Desmond at 4:44 AM.\n\nYou find his equipment still running. The waveform shows two voices: his, and an older recording underneath. Speaking the same words at the same time.\n\nYou leave with the tape.\n\nEcho Chain Episode 112 wins every award that year. You never play it for anyone else.`,
+    priya: `Priya's name was in the ledger. You always suspected she knew more than she said.\n\nShe confirms it before she goes in: "I came here to end it. My grandmother's name is in that ledger. She was the first to hear it all the way through. The first to vanish.\n\nI thought if I solved it, she'd come back.\n\nMaybe she will."\n\nThe broadcast takes her voice but leaves her body — she is found outside the station at sunrise, unharmed, with no memory of the previous four hours.\n\nShe never speaks of it again.\n\nShe never stops researching.`,
+    self: `You sit down at the microphone alone.\n\nYour team watches through the glass. Mira's hand is against it. Desmond has his eyes closed. Priya is recording.\n\nYou say your name.\n\nThe frequency takes it — takes the copy of you that it's been building all night. Your memories, your voice, your curiosity.\n\nThe broadcast continues.\n\nYou walk out of the booth. You feel lighter.\n\nOn the drive back, you realize you can't remember the last episode you recorded. Or the one before it. Or your first day at the station.\n\nThe signal has your beginning.\n\nBut you still have an end.`
+  };
+
+  G.ending = 'sacrifice_'+who;
+  showEnding(
+    '📻',
+    names[who] + ' STAYS BEHIND',
+    narratives[who],
+    G.solvedPuzzles.size + '/6 puzzles solved',
+    'SACRIFICE'
+  );
+}
+
+function revealTruth() {
+  G.ending = 'truth';
+  showEnding(
+    '🔊',
+    'THE TRUTH GOES LIVE',
+    `You press TRANSMIT instead of ERASE.\n\nThe full broadcast — the ledger, the disappearances, the 1974 incident, everything — goes out live on Frequency 333. The signal carries it to every receiver in range.\n\nThe Voice screams for the first time.\n\n<em>"You're not supposed to do that. You're supposed to CHOOSE. That's the ritual. That's how I survive."</em>\n\nBut without the sacrifice, without the one voice willingly given — the frequency can't sustain itself.\n\nIt drops.\n\nFrequency 333 goes silent.\n\nYou all walk out into the morning. The door is unlocked. The birds are loud. The signal is dead.\n\nEcho Chain Episode 112 is never officially released. But the truth is out there, spreading through shortwave bands and late-night forums.\n\nSomewhere, someone is building a receiver to find it.\n\nThe broadcast isn't dead. It's waiting for the next curious ear.\n\n"The broadcast isn't haunted. It's hungry."`,
+    G.solvedPuzzles.size + '/6 puzzles solved',
+    'TRUTH'
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+//  ENDING
+// ═══════════════════════════════════════════════════════
+function showEnding(symbol, title, narrative, score, label) {
+  document.getElementById('endingSymbol').textContent = symbol;
+  document.getElementById('endingTitle').textContent = title;
+  document.getElementById('endingNarrative').innerHTML = narrative.replace(/\n/g,'<br>');
+  document.getElementById('finalScore').textContent = G.solvedPuzzles.size;
+  document.getElementById('endingLabel').textContent = label;
+
+  // Progress dots
+  const dots = document.getElementById('endingDots');
+  dots.innerHTML = '';
+  for(let i=0;i<6;i++){
+    const d=document.createElement('div');
+    d.className='dot'+(i<G.solvedPuzzles.size?' done':'');
+    dots.appendChild(d);
+  }
+
+  showScreen('ending');
+}
+
+// ═══════════════════════════════════════════════════════
+//  POPUP
+// ═══════════════════════════════════════════════════════
+let popupTimer;
+function showPopup(msg) {
+  const el = document.getElementById('popupMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(popupTimer);
+  popupTimer = setTimeout(()=>el.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════════════════
+//  RESTART
+// ═══════════════════════════════════════════════════════
+function restartGame() {
+  G.level=1; G.scene=0; G.sanity=100;
+  G.inventory=[]; G.solvedPuzzles=new Set();
+  G.log=[]; G.choicesMade={}; G.ending=null;
+  document.getElementById('inventory').innerHTML='';
+  document.getElementById('log').innerHTML='';
+  document.getElementById('sanityFill').style.width='100%';
+  document.getElementById('sanityFill').style.background='';
+  dialVals={month:1,day:1,year:60};
+  document.getElementById('dialMonth').textContent='01';
+  document.getElementById('dialDay').textContent='01';
+  document.getElementById('dialYear').textContent='60';
+  showScreen('intro');
+}
+
+// ═══════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════
+window.onload = () => {
+  setTimeout(doLoad, 400);
+};
+</script>
+</body>
+</html>
