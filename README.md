@@ -46,5 +46,3 @@ Your team arrives at an abandoned radio station — WKTZ, shut down in 1974 afte
 | Reveal the Truth | Transmit everything — the frequency dies, but it's waiting |
 
 ---
-
-rameworks were harmed in the making of this broadcast.*
