@@ -7,19 +7,9 @@
 
 ## 🎮 Play Instantly
 
-**[▶ PLAY NOW](https://yourusername.github.io/frequency-333/)** ← replace with your GitHub Pages URL
+**[▶ PLAY NOW](https://bhoomikajk.github.io/frequency333/)** 
 
 No downloads. No installs. Pure HTML/CSS/JS — works in any modern browser.
-
----
-
-## 🚀 Deploy to GitHub Pages (3 steps)
-
-1. **Fork or upload** — Create a new repo and upload `index.html`
-2. **Enable Pages** — Go to `Settings → Pages → Source: main branch → / (root)`
-3. **Play** — Your game is live at `https://yourusername.github.io/repo-name/`
-
-*Note: The game uses Google Fonts (Special Elite, VT323, Crimson Text) — requires internet for first load. After that it's cached. All game logic is 100% offline.*
 
 ---
 
@@ -57,28 +47,4 @@ Your team arrives at an abandoned radio station — WKTZ, shut down in 1974 afte
 
 ---
 
-## 🛠 Technical
-
-- **Single file** — Everything in `index.html`
-- **Zero dependencies** — No npm, no build step, no frameworks
-- **Google Fonts** — Special Elite · VT323 · Crimson Text (CDN, cached after first load)
-- **No localStorage** — Session-only state
-- **Mobile friendly** — Responsive layout, sidebar collapses on small screens
-
----
-
-## 🎨 Design Features
-
-- CRT scanline overlay + static flicker animation
-- Animated radio frequency visualizer
-- Sanity/signal meter that degrades with wrong answers
-- Inventory + broadcast log sidebar
-- Static vision cutscenes for psychological moments
-- Glitch text effects
-- Acoustic frequency grid puzzle
-- Full NPC voice lines for "The Voice"
-- 4 distinct endings with unique narratives
-
----
-
-*Built with pure HTML/CSS/JS. No frameworks were harmed in the making of this broadcast.*
+rameworks were harmed in the making of this broadcast.*
